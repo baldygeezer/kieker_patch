@@ -48,7 +48,7 @@ def write_agent(commit:dict, type:str, provdoc:ProvDocument):
 def mint_non_github_agent(user_value:str, provdoc:ProvDocument,name:str)-> model.ProvAgent:
     ns = uuid.uuid5(uuid.NAMESPACE_URL,ProvPubNameSpace.PARS.url)
     user_hash = uuid.uuid5(ns, user_value)
-    url=f"{ProvPubNameSpace.PARS.url}{id}"
+    url=f"{ProvPubNameSpace.PARS.url}{user_hash}"
     return provdoc.agent(url,other_attributes={"foaf:name": name})
 
 
