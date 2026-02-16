@@ -6,7 +6,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from model import JiraComment
+
 
 
 
@@ -44,7 +44,7 @@ class JiraClient:
             "description": fields.get("description", {})
         }
 
-    def get_issue_comments(self, issue_url: str, page_size=2) -> list[JiraComment]:
+    def get_issue_comments(self, issue_url: str, page_size=2) -> list[dict]:
         comments_url = issue_url + "/comment"
         page_start = 0
         results = []
