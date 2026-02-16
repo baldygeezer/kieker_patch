@@ -1,6 +1,7 @@
 import json
+import re
 from pathlib import Path
-from typing import List, Dict, Any
+
 
 def read_jsonl(path: str):
     """iterate a jsonl file and access each line as dict"""
@@ -37,8 +38,6 @@ def print_keys(filepath):
 def get_merged_events():
     merged=[]
     for line in read_jsonl("data/timeline_events.jsonl"):
-        # if line.get("event") is not None and line.get("commit_id") != "null":
-        #     print(line["commit_id"])
         if line.get("event") == "merged":
             merged.append(line)
     print(len(merged))
@@ -51,3 +50,16 @@ def strip_field(filepath:str|Path, result_file:str|Path, field:str):
             line.pop(field, None)
             lines.append(json.dumps(line, ensure_ascii=False) + "\n")
         out_file.writelines(lines)
+
+def get_gh_jira_issues_map():
+    mapping={}
+    with open("data/jira_issues_map.json", "w") as out_file:
+        for line in read_jsonl("data/kieker_issue_titles.jsonl"):
+            issue_title  = line.get("title")
+            match = re.search(r"\[(KIEKER-[^\[\]]+)\]", issue_title)
+            if match:
+                jira_id = match.group(1)
+                issue_number = line.get("number")
+                mapping[issue_number]=jira_id
+
+        out_file.write(json.dumps(mapping, ensure_ascii=False))
