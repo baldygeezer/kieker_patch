@@ -8,9 +8,7 @@ from urllib3.util.retry import Retry
 
 from model import JiraComment
 
-LOOKUP_PATH = Path("data/name_lookup.json")
-with LOOKUP_PATH.open("r", encoding="utf-8") as f:
-    NAME_LOOKUP: dict[str, str] = json.load(f)
+
 
 
 @dataclass(frozen=True)

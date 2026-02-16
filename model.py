@@ -1,9 +1,15 @@
+import json
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 
 from prov.identifier import QualifiedName, Namespace
 
-from jira_api import NAME_LOOKUP
+
+
+LOOKUP_PATH = Path("data/name_lookup.json")
+with LOOKUP_PATH.open("r", encoding="utf-8") as f:
+    NAME_LOOKUP: dict[str, str] = json.load(f)
 
 
 class ProvPubNameSpace(Enum):
