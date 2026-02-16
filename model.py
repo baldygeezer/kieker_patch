@@ -1,9 +1,9 @@
+from dataclasses import dataclass
 from enum import Enum
 
 from prov.identifier import QualifiedName, Namespace
 
-
-
+from jira_api import NAME_LOOKUP
 
 
 class ProvPubNameSpace(Enum):
@@ -47,3 +47,28 @@ class ProvPubNameSpace(Enum):
 class ghtp_types(Enum):
     COMMIT = QualifiedName(ProvPubNameSpace.GITHUB2PROV.namespace,"commit")
 
+
+@dataclass(frozen=True)
+class JiraComment:
+    author_name: str
+    created: str
+    body: str
+    id: str
+
+    @property
+    def author_github(self) -> str:
+        return NAME_LOOKUP.get(self.author_name)
+
+
+@dataclass(frozen=True)
+class JiraIssue:
+    id: str
+    key: str
+    created: str
+    reporter: str
+    comments: list[JiraComment]
+    description:dict
+
+    @property
+    def github_reporter(self) -> str|None:
+        return NAME_LOOKUP.get(self.reporter)

@@ -6,37 +6,11 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from model import JiraComment
+
 LOOKUP_PATH = Path("data/name_lookup.json")
 with LOOKUP_PATH.open("r", encoding="utf-8") as f:
     NAME_LOOKUP: dict[str, str] = json.load(f)
-
-
-
-
-@dataclass(frozen=True)
-class JiraComment:
-    author_name: str
-    created: str
-    body: str
-    id: str
-
-    @property
-    def author_github(self) -> str:
-        return NAME_LOOKUP.get(self.author_name)
-
-
-@dataclass(frozen=True)
-class JiraIssue:
-    id: str
-    key: str
-    created: str
-    reporter: str
-    comments: list[JiraComment]
-    description:dict
-
-    @property
-    def github_reporter(self) -> str|None:
-        return NAME_LOOKUP.get(self.reporter)
 
 
 @dataclass(frozen=True)
@@ -88,12 +62,17 @@ class JiraClient:
             max_results = (json["maxResults"] or page_size)
 
             for comment in comments:
-
-                result = JiraComment(author_name=comment["author"]["displayName"],
-                                     created=comment["created"],
-                                     body=comment.get("body", ""),
-                                     id=comment["id"])
-                results.append(result)
+                # result = JiraComment(author_name=comment["author"]["displayName"],
+                #                      created=comment["created"],
+                #                      body=comment.get("body", ""),
+                #                      id=comment["id"])
+                results.append(
+                    {"author_name": comment["author"]["displayName"],
+                     "created": comment["created"],
+                     "body": comment["body"],
+                     "id": comment["id"]}
+                )
+                # results.append(result)
 
 
             page_start = (json["startAt"] or page_start) + max_results
@@ -108,16 +87,21 @@ class JiraClient:
 
         return results
 
-    def get_gira_issue(self, jira_id: str) -> JiraIssue:
+    def get_gira_issue(self, jira_id: str) -> dict:
         issue_url = f"{self.base_url}/rest/api/3/issue/{jira_id}"
         base_issue = self._get_base_issue(issue_url)
         base_issue_comments = self.get_issue_comments(issue_url)
-        jira_issue = JiraIssue(key=base_issue['key'],
-                               created=base_issue['created'],
-                               reporter=base_issue['reporter'],
-                               comments=base_issue_comments,
-                               id=base_issue['id'])
-        return jira_issue
+        return {"issue": base_issue, "comments": base_issue_comments}
+        # jira_issue = JiraIssue(key=base_issue['key'],
+        #                        created=base_issue['created'],
+        #                        reporter=base_issue['reporter'],
+        #                        comments=base_issue_comments,
+        #                        id=base_issue['id'],
+        #                        description=base_issue['description'])
+        # return jira_issue
+
+
+
 
     def get_jira_issue_data(self) -> dict:
         pass
