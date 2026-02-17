@@ -8,8 +8,8 @@ from urllib3.util.retry import Retry
 
 
 
-
-
+data_dump = Path(__file__).parent / "data/jira_issues_dump/issues.jsonl"
+input_list = Path(__file__).parent / "data/issues_list.txt"
 
 @dataclass(frozen=True)
 class JiraClient:
@@ -31,7 +31,8 @@ class JiraClient:
 
     def _get_base_issue(self, issue_url: str) -> dict:
         # url=f"{self.base_url}/rest/api/3/issue/{key}"
-        params = {"fields": "created, reporter, description"}
+        params = {"fields": "created, reporter, description, changelog",
+                  "expand":"changelog"}
         response = self.session.get(issue_url, params=params, timeout=30)
         response.raise_for_status()
         json = response.json()
@@ -41,7 +42,8 @@ class JiraClient:
             "key": json.get("key"),
             "created": fields.get("created"),
             "reporter": fields.get("reporter", {}).get("displayName"),
-            "description": fields.get("description", {})
+            "description": fields.get("description", {}),
+            "changelog": json.get("changelog", {})
         }
 
     def get_issue_comments(self, issue_url: str, page_size=2) -> list[dict]:
@@ -85,7 +87,7 @@ class JiraClient:
 
         return results
 
-    def get_gira_issue(self, jira_id: str) -> dict:
+    def get_jira_issue(self, jira_id: str) -> dict:
         issue_url = f"{self.base_url}/rest/api/3/issue/{jira_id}"
         base_issue = self._get_base_issue(issue_url)
         base_issue_comments = self.get_issue_comments(issue_url)
@@ -98,7 +100,15 @@ class JiraClient:
         #                        description=base_issue['description'])
         # return jira_issue
 
+    # ,input_list.open("r") as load:
+    # issues_list = load.read()
+    #    for issue_id in issues_list:
+    def dump_jira_data(self,jira_issue_id: str) -> dict:
+        with data_dump.open("a") as dump:
+            issue_dict=self.get_jira_issue(jira_issue_id)
 
+            json.dump({jira_issue_id:issue_dict},dump)
+            dump.write("\n")
 
 
     def get_jira_issue_data(self) -> dict:
