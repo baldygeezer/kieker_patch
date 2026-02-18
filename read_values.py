@@ -1,5 +1,6 @@
 import json
 import re
+from collections import defaultdict
 from pathlib import Path
 
 
@@ -53,7 +54,7 @@ def strip_field(filepath:str|Path, result_file:str|Path, field:str):
 
 def get_gh_jira_issues_map():
     mapping={}
-    with open("data/jira_issues_map.json", "w") as out_file:
+    with open("data/gh_to_jira_issues_map.json", "w") as out_file:
         for line in read_jsonl("data/kieker_issue_titles.jsonl"):
             issue_title  = line.get("title")
             match = re.search(r"\[(KIEKER-[^\[\]]+)\]", issue_title)
@@ -63,3 +64,32 @@ def get_gh_jira_issues_map():
                 mapping[issue_number]=jira_id
 
         out_file.write(json.dumps(mapping, ensure_ascii=False))
+
+
+def get_gh_duplicate_issues():
+    issues_map_path=Path("data/gh_to_jira_issues_map.json")
+    mapped_issues={}
+    with issues_map_path.open("r") as in_file:
+        mapped_issues=json.load(in_file)
+
+    value_to_keys = defaultdict(list)
+    for k, v in mapped_issues.items():
+        value_to_keys[v].append(k)
+
+    non_unique = {v: ks for v, ks in value_to_keys.items() if len(ks) > 1}
+
+    # show counts, sorted
+    for v, ks in sorted(non_unique.items(), key=lambda item: len(item[1]), reverse=True)[:30]:
+        print(v,  ks[:10])
+
+
+def flip_map(orig:dict):
+    flippy: dict[str, list[str]] = defaultdict(list)
+    for k, v in orig.items():
+        flippy[v].append(k)
+    flipped = dict(flippy)
+
+    with open("data/jira_to_gh_issues_map.json", "w") as out_file:
+        out_file.write(json.dumps(flipped, ensure_ascii=False))
+
+    return flipped
