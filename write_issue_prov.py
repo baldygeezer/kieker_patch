@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from model import JiraComment, JiraIssue
+from read_values import read_jsonl
 from sparql_client import KiekerClient, KiekerQuery
 
 
@@ -34,11 +36,17 @@ def get_github_issue_history(github_issue_id=None, jira_id=None)->list[dict]:
 
 def write_jira_prov():
     jira_id_map_path=Path("data/jira_to_gh_issues_map.json")
+    jira_data_path=Path("data/jira_issues_dump/issues.jsonl")
     jira_gh_issues_map=None
+
     with jira_id_map_path.open("r") as in_file:
         jira_gh_issues_map=json.load(in_file)
 
     # for jira_id in jira_gh_issues_map.keys():
-    for jira_id in jira_gh_issues_map.keys():
+    for key, value in read_jsonl(jira_data_path):
+        jira_id=key
+        issue=value["issue"]
+        changelog=issue["changelog"]
+        comments=value["comments"]
         gh_history=get_github_issue_history(jira_id=jira_id)
-        jira_history=''
+        jira_issue=JiraIssue()
