@@ -74,7 +74,23 @@ class JiraIssue:
     reporter: str
     comments: list[JiraComment]
     description:dict
+    changelog:list
 
     @property
     def github_reporter(self) -> str|None:
         return NAME_LOOKUP.get(self.reporter)
+
+    @property
+    def created(self)->str:
+        return ''
+
+
+class IssueEvents(Enum):
+    comment = "<http://purl.org/github2prov/comment>"
+    assigned = "<http://purl.org/github2prov/assigned>"
+    labeled = "<http://purl.org/github2prov/labeled>"
+    closed = "<http://purl.org/github2prov/closed>"
+    unassigned = "<http://purl.org/github2prov/unassigned>"
+    connected = "<http://purl.org/github2prov/connected>"
+    renamed = "<http://purl.org/github2prov/renamed>"
+    reopened = "<http://purl.org/github2prov/reopened>"
