@@ -4,7 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 
 
-def read_jsonl(path: str):
+def read_jsonl(path: str|Path):
     """iterate a jsonl file and access each line as dict"""
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
