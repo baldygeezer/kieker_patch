@@ -2,10 +2,11 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Self
 
 from prov.identifier import QualifiedName, Namespace
 
-
+from write_issue_prov import get_github_issue_history
 
 LOOKUP_PATH = Path("data/name_lookup.json")
 with LOOKUP_PATH.open("r", encoding="utf-8") as f:
@@ -60,6 +61,7 @@ class JiraComment:
     created: str
     body: str
     id: str
+    references:list
 
     @property
     def author_github(self) -> str:
@@ -83,6 +85,22 @@ class JiraIssue:
     @property
     def created(self)->str:
         return ''
+
+    @classmethod
+    def from_json(cls, data) -> Self:
+        jira_id = None
+        issue=None
+        for k,v in data.items():
+            jira_key=k
+            issue=v["issue"]
+            jira_id =issue["id"]
+        changelog=issue["changelog"]
+        comments=issue["comments"]
+        gh_history=get_github_issue_history(jira_id=jira_id)
+
+        return cls()
+
+
 
 
 class IssueEvents(Enum):
