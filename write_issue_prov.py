@@ -43,10 +43,14 @@ def write_jira_prov():
         jira_gh_issues_map=json.load(in_file)
 
     # for jira_id in jira_gh_issues_map.keys():
-    for key, value in read_jsonl(jira_data_path):
-        jira_id=key
-        issue=value["issue"]
-        changelog=issue["changelog"]
-        comments=value["comments"]
-        gh_history=get_github_issue_history(jira_id=jira_id)
-        jira_issue=JiraIssue()
+    for line in read_jsonl(jira_data_path):
+        issue = JiraIssue.from_json(line)
+
+
+
+
+def get_jira_comments(comments_data:list[dict])->list[JiraComment]:
+    jira_comments=[]
+    for comment in comments_data:
+        jira_comment=JiraComment(comment)
+        jira_comments.append(jira_comment)
