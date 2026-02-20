@@ -23,5 +23,6 @@ def write_jira_prov():
 def get_jira_comments(comments_data:list[dict])->list[JiraComment]:
     jira_comments=[]
     for comment in comments_data:
-        jira_comment=JiraComment(comment)
+        jira_comment=JiraComment.from_json(comment)
         jira_comments.append(jira_comment)
+    return jira_comments
