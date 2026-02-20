@@ -8,6 +8,7 @@ from typing import Self, TypedDict
 from prov.identifier import QualifiedName, Namespace
 
 from loader import get_github_issue_history
+from user_lookup import github_user_from_name
 
 LOOKUP_PATH = Path("data/name_lookup.json")
 with LOOKUP_PATH.open("r", encoding="utf-8") as f:
@@ -96,6 +97,7 @@ class JiraIssue:
     comments: list[JiraComment]
     description:dict
     changelog:list
+    github_history:list[GithubHistoryDict]
 
 
     @property
@@ -116,12 +118,17 @@ class JiraIssue:
         jira_key = k
         jira_id =issue["id"]
         changelog=issue["changelog"]
-        comments =issue["comments"]
+        comments = [JiraComment.from_json(comment) for comment in issue["comments"]]
+        reporter = github_user_from_name(issue["reporter"])
         created=date.fromisoformat(issue["created"])
 
         gh_history=get_github_issue_history(jira_id=jira_id)
 
-        return cls(id=jira_id,key=k,created=)
+        return cls(id=jira_id,
+                   key=k,
+                   comments = comments,
+                   created=created,
+                   reporter=)
 
 
 

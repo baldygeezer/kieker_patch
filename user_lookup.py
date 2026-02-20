@@ -73,9 +73,10 @@ def github_user_from_name(real_name: str) -> str|None:
     normalised_name=real_name.strip().lower()
     github_user= lookup.get(normalised_name)
     if github_user is not None:
-        return github_user
+        return f"https://github.com/{github_user}"
     _log_name_not_found(real_name)
-    return None
+    print("WARNING: name not found in lookup. Check the log")
+    return f"https://github.com/{normalised_name.strip(" ")}"
 
 def _log_name_not_found(real_name: str):
     if not real_name:
