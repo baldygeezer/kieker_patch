@@ -1,18 +1,18 @@
 import json
 from pathlib import Path
 
-from model import JiraIssue
+from model import JiraIssue, GithubHistoryDict
 from sparql_client import KiekerClient
 
 
-def get_github_issue_history(github_issue_id=None, jira_id=None)->list[dict]:
+def get_github_issue_history(github_issue_id=None, jira_id=None)->list[GithubHistoryDict]:
     """Retrieve the history of an issue from a github2prov model. if the id of a jira issue is provided, this will be
     used to retrieve the equivalent github3prov issue's history. Some jira issues can map to multiple duplicate github
     issues. The return value of this function is a list and where there are github duplicates this will have multiple
     values"""
 
 
-    results = []
+    results:list[GithubHistoryDict] = []
     jira_gh_issues_map=None
     issues_map_path=Path("data/jira_to_gh_issues_map.json")
     with issues_map_path.open("r") as in_file:

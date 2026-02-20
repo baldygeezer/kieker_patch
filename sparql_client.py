@@ -2,6 +2,8 @@ from enum import Enum
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 
+from model import GithubHistoryDict, GithubEventDict
+
 
 class KiekerQuery(Enum):
     ISSUE_EVENTS = """
@@ -46,16 +48,17 @@ class KiekerClient:
         client.setReturnFormat(result_format)
         return client.query().convert()
 
-    def get_github_issue_events(self, github_issue_id) -> dict:
+    def get_github_issue_events(self, github_issue_id) -> GithubHistoryDict:
         issue_iri=f"https://github.com/kieker-monitoring/kieker/issues/{github_issue_id}"
         query = KiekerQuery.ISSUE_EVENTS
         result_set = self._run(query.query(issue=issue_iri))
-        events = []
+        events:list[GithubEventDict] = []
         for item in result_set['results']['bindings']:
             event = item['event']['value']
             event_type = item['event_type']['value']
             events.append({"event":event, "event_type":event_type})
+
         return {"github_id": github_issue_id,
-                "iri":issue_iri,
+                "issue_iri":issue_iri,
                 "events":events
                 }
