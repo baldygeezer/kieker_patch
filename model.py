@@ -68,6 +68,10 @@ class JiraComment:
     def author_github(self) -> str:
         return NAME_LOOKUP.get(self.author_name)
 
+    @classmethod
+    def from_json(self, data: dict) -> Self:
+        pass
+
 
 @dataclass(frozen=True)
 class JiraIssue:
@@ -78,6 +82,7 @@ class JiraIssue:
     comments: list[JiraComment]
     description:dict
     changelog:list
+
 
     @property
     def github_reporter(self) -> str|None:
