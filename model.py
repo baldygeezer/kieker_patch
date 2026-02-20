@@ -1,12 +1,13 @@
 import json
 from dataclasses import dataclass
+from datetime import date
 from enum import Enum
 from pathlib import Path
 from typing import Self
 
 from prov.identifier import QualifiedName, Namespace
 
-from write_issue_prov import get_github_issue_history
+from loader import get_github_issue_history
 
 LOOKUP_PATH = Path("data/name_lookup.json")
 with LOOKUP_PATH.open("r", encoding="utf-8") as f:
@@ -90,15 +91,18 @@ class JiraIssue:
     def from_json(cls, data) -> Self:
         jira_id = None
         issue=None
+        k=None
         for k,v in data.items():
-            jira_key=k
             issue=v["issue"]
-            jira_id =issue["id"]
+        jira_key = k
+        jira_id =issue["id"]
         changelog=issue["changelog"]
-        comments=issue["comments"]
+        comments =issue["comments"]
+        created=date.fromisoformat(issue["created"])
+
         gh_history=get_github_issue_history(jira_id=jira_id)
 
-        return cls()
+        return cls(id=jira_id,key=k,created=)
 
 
 
