@@ -33,7 +33,9 @@ def get_github_issue_history(github_issue_id=None, jira_id=None)->list[GithubHis
 
     return results
 
-def get_issue(jira_id):
+def get_issue(issue_data):
+    jira_id=issue_data["key"]
     github_history=get_github_issue_history(jira_id=jira_id)
-    jira_issue=JiraIssue.from_json(github_history)
-    return jira_issue
+
+    # # jira_issue=JiraIssue.from_json()
+    # return jira_issue
