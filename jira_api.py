@@ -6,10 +6,9 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-
-
 data_dump = Path(__file__).parent / "data/jira_issues_dump/issues.jsonl"
 input_list = Path(__file__).parent / "data/issues_list.txt"
+
 
 @dataclass(frozen=True)
 class JiraClient:
@@ -32,7 +31,7 @@ class JiraClient:
     def _get_base_issue(self, issue_url: str) -> dict:
         # url=f"{self.base_url}/rest/api/3/issue/{key}"
         params = {"fields": "created, reporter, description, changelog",
-                  "expand":"changelog"}
+                  "expand": "changelog"}
         response = self.session.get(issue_url, params=params, timeout=30)
         response.raise_for_status()
         json = response.json()
@@ -74,7 +73,6 @@ class JiraClient:
                 )
                 # results.append(result)
 
-
             page_start = (json["startAt"] or page_start) + max_results
 
             # stop if we got less than a full page
@@ -92,24 +90,13 @@ class JiraClient:
         base_issue = self._get_base_issue(issue_url)
         base_issue_comments = self.get_issue_comments(issue_url)
         return {"issue": base_issue, "comments": base_issue_comments}
-        # jira_issue = JiraIssue(key=base_issue['key'],
-        #                        created=base_issue['created'],
-        #                        reporter=base_issue['reporter'],
-        #                        comments=base_issue_comments,
-        #                        id=base_issue['id'],
-        #                        description=base_issue['description'])
-        # return jira_issue
 
-    # ,input_list.open("r") as load:
-    # issues_list = load.read()
-    #    for issue_id in issues_list:
-    def dump_jira_data(self,jira_issue_id: str) -> dict:
+    def dump_jira_data(self, jira_issue_id: str) -> dict:
         with data_dump.open("a") as dump:
-            issue_dict=self.get_jira_issue(jira_issue_id)
+            issue_dict = self.get_jira_issue(jira_issue_id)
 
-            json.dump({jira_issue_id:issue_dict},dump)
+            json.dump({jira_issue_id: issue_dict}, dump)
             dump.write("\n")
-
 
     def get_jira_issue_data(self) -> dict:
         pass
