@@ -99,69 +99,47 @@ def flip_map(orig: dict):
     return flipped
 
 
-def process_content(content: dict) -> dict:
-    issue_refs: list[str] = []
-    user_mentions: list[str] = []
-    body = """"""
-    for item in content:
-        if item["type"] == "paragraph":
-            text,i_refs,usr_mentions = _process_paragraph(item)
-            issue_refs.extend(i_refs)
-            user_mentions.extend(usr_mentions)
-            body.join(text)
-        elif item["type"] == "bulletList":
-                item_text = item['attrs'].get("text")
-
+def process_content(issue: dict) -> dict:
+    text, i_refs, usr_mentions = process_content_block(issue['content'])
     return {
-        "body": body,
-        "issue_references": issue_refs
-        "user_mentions": user_mentions
+        "body": text,
+        "issue_references": i_refs,
+        "user_mentions": usr_mentions
     }
 
 
-def _process_paragraph(para: dict) -> tuple[str, list[str], list[str]]:
+def process_content_block(content: list) -> tuple[str, list[str], list[str]]:
     issue_refs: list[str] = []
-    user_mentions:list[str] = []
-    parts = []
-    text = """"""
-    for item in para['content']:
-        if item["type"] == "paragraph":
-            txt,i_refs,u_mentions = _process_paragraph(item)
+    user_mentions: list[str] = []
+    parts: list[str] = []
+    body = """"""
+    for item in content:
+        if item["type"] in ["bulletList", "orderedList", "paragraph", "listItem"]:
+            item_content = item['content']
+            text, i_refs, usr_mentions = process_content_block(item_content)
             issue_refs.extend(i_refs)
-            user_mentions.extend(u_mentions)
+            user_mentions.extend(usr_mentions)
+            if item["type"] in ["paragraph"]:
+                parts.append(text + '\n')
+            elif item["type"] == "listItem":
+                parts.append('- ' + text)
+            else:
+                parts.append(text)
+        elif item["type"] == "text":
+            txt = item.get("text") or "\n"
             parts.append(txt)
-        if item["type"] == "inlineCard":
+        elif item["type"] == "inlineCard":
             item_url = item['attrs'].get("url")
             if item_url:
                 issue_refs.append(item_url)
                 parts.append(item_url)
             else:
                 print(f"Warning: inlineCard item has no 'url' field: {item}")
-        if item["type"] == "mention":
+        elif item["type"] == "mention":
             item_text = item['attrs'].get("text")
             if item_text:
                 user_mentions.append(item_text)
                 parts.append(item_text)
             else:
                 print(f"Warning: mention item has no 'text' field: {item}")
-
-        if item["type"] == "text":
-            txt = item.get("text") or "\n"
-            parts.append(txt)
-
-
-    parts.append("\n")
-
-    return text.join(parts), issue_refs , user_mentions
-
-
-def process_bullet_list(bullet_list: dict) -> tuple[str, list[str], list[str]]:
-    issue_refs: list[str] = []
-    user_mentions: list[str] = []
-    text=""""""
-
-
-    # if item["type"] == "text":
-    #     if len(text) == 0:
-    #         parts.append(item)
-    #     else:parts.append(f"{item}\n")
+    return body.join(parts), issue_refs, user_mentions
