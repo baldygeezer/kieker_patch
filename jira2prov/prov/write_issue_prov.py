@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
 
-from model import JiraComment, JiraIssue
+from jira2prov.model.model import JiraComment, JiraIssue
 from read_values import read_jsonl
 
 
 def write_jira_prov():
-    jira_id_map_path=Path("data/jira_to_gh_issues_map.json")
-    jira_data_path=Path("data/jira_issues_dump/issues.jsonl")
+    jira_id_map_path=Path("../../data/jira_to_gh_issues_map.json")
+    jira_data_path=Path("../../data/jira_issues_dump/issues.jsonl")
     jira_gh_issues_map=None
 
     with jira_id_map_path.open("r") as in_file:

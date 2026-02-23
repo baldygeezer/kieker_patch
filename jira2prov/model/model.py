@@ -8,8 +8,8 @@ from typing import Self
 
 from prov.identifier import QualifiedName, Namespace
 
-from collections import GithubHistoryDict, JiraHistoryEventDict
-from loader import get_github_issue_history
+from jira2prov.model.collections import GithubHistoryDict, JiraHistoryEventDict
+from jira2prov.loader import get_github_issue_history
 from user_lookup import github_user_from_name
 
 LOOKUP_PATH = Path("data/name_lookup.json")
@@ -140,9 +140,9 @@ class JiraIssue(Jira2ProvItem):
     def github_reporter(self) -> str|None:
         return NAME_LOOKUP.get(self.reporter)
 
-    @property
-    def created(self)->str:
-        return ''
+    # @property
+    # def created(self)->str:
+    #     return ''
 
     @classmethod
     def from_json(cls, data) -> Self:
@@ -152,8 +152,9 @@ class JiraIssue(Jira2ProvItem):
             issue=v["issue"]
         jira_key = issue["key"]
         jira_id =issue["id"]
+
         changelog=[JiraHistoryEventDict(id=item["id"],
-                                        field=item["field"],
+                                        fields=item["items"],
                                         to_string=item['items']["to_string"],
                                         from_string=item['items']["from_string"],
                                         agent=item["author"]["displayName"],

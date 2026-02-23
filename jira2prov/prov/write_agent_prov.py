@@ -1,7 +1,7 @@
 import prov.model as model
 from prov.identifier import Namespace
 import uuid
-from model import ProvPubNameSpace, ghtp_types
+from jira2prov.model.model import ProvPubNameSpace
 from user_lookup import lookup
 from read_values import read_jsonl
 from prov.model import ProvDocument
