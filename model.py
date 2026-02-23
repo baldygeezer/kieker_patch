@@ -1,4 +1,5 @@
 import json
+from abc import ABC
 from dataclasses import dataclass
 from datetime import date
 from enum import Enum
@@ -15,7 +16,6 @@ with LOOKUP_PATH.open("r", encoding="utf-8") as f:
     NAME_LOOKUP: dict[str, str] = json.load(f)
 
 
-
 class GithubEventDict(TypedDict):
     event:str
     event_type:str
@@ -25,7 +25,13 @@ class GithubHistoryDict(TypedDict):
     issue_iri: str
     events:list[GithubEventDict]
 
-
+class JiraHistoryEventDict(TypedDict):
+    id:str
+    field: str
+    from_string: str
+    to_string: str
+    date: str
+    agent: str
 
 
 
@@ -70,9 +76,13 @@ class ProvPubNameSpace(Enum):
 class ghtp_types(Enum):
     COMMIT = QualifiedName(ProvPubNameSpace.GITHUB2PROV.namespace,"commit")
 
+class Jira2ProvItem(ABC):
+    @classmethod
+    def from_json(cls, data: dict) -> Self:
+        pass
 
 @dataclass(frozen=True)
-class JiraComment:
+class JiraComment(Jira2ProvItem):
     author_name: str
     created: str
     body: str
@@ -88,8 +98,52 @@ class JiraComment:
         pass
 
 
+class Jira2Prov(Enum):
+    """not in use, may never be"""
+    ASSIGNED = "Assigned"
+    CLOSED = "Closed"
+    WORKFLOWCHANGE = "WorkflowChange"
+    FIXVERSION = "fixVersion"
+    COMMENT = "Comment"
+    # link to a remote entity that isn't an issue - eg. meeting minutes item
+    REMOTEISSUELINK= "RemoteIssueLink"
+    # to another issue
+    LINK ="Link"
+
+    @property
+    def prefix(self)->str:
+        pass
+
+
 @dataclass(frozen=True)
-class JiraIssue:
+class JiraHistoryItem(Jira2ProvItem):
+    id: str
+    type: str
+    _start: str
+    _end: str
+    agent:str
+
+    @classmethod
+    def from_json(cls, history_item: JiraHistoryEventDict) -> Self:
+        type = history_item["field"] + history_item["to_string"]
+        return cls(id=history_item["id"],
+                   type=type,
+                    _start=history_item["date"],
+                    _end=history_item["date"],
+                    agent=history_item["agent"])
+    @property
+    def github_agent(self)->str:
+        return NAME_LOOKUP.get(self.agent)
+
+    @property
+    def start(self)->date:
+        return date.fromisoformat(self._start)
+    @property
+    def end(self)->date:
+        return date.fromisoformat(self._end)
+
+@dataclass(frozen=True)
+class JiraIssue(Jira2ProvItem):
     id: str
     key: str
     created: str
@@ -98,7 +152,7 @@ class JiraIssue:
     description:dict
     changelog:list
     github_history:list[GithubHistoryDict]
-
+    _jira_history:list[JiraHistoryItem]
 
     @property
     def github_reporter(self) -> str|None:
@@ -112,23 +166,31 @@ class JiraIssue:
     def from_json(cls, data) -> Self:
         jira_id = None
         issue=None
-        k=None
         for k,v in data.items():
             issue=v["issue"]
-        jira_key = k
+        jira_key = issue["key"]
         jira_id =issue["id"]
-        changelog=issue["changelog"]
+        changelog=[JiraHistoryEventDict(id=item["id"],
+                                        field=item["field"],
+                                        to_string=item['items']["to_string"],
+                                        from_string=item['items']["from_string"],
+                                        agent=item["author"]["displayName"],
+                                        date=item['created']) for item in issue["changelog"]["histories"]]
         comments = [JiraComment.from_json(comment) for comment in issue["comments"]]
         reporter = github_user_from_name(issue["reporter"])
-        created=date.fromisoformat(issue["created"])
-
+        created=issue["created"]
         gh_history=get_github_issue_history(jira_id=jira_id)
 
         return cls(id=jira_id,
-                   key=k,
+                   key=jira_key,
                    comments = comments,
                    created=created,
-                   reporter=)
+                   reporter=github_user_from_name(reporter),
+                   github_history=gh_history,
+                  _jira_history=[JiraHistoryItem.from_json(item) for item in changelog],
+                   description=issue["description"],
+                   changelog=changelog
+                   )
 
 
 
