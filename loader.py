@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from model import JiraIssue, GithubHistoryDict
+from collections import GithubHistoryDict
 from sparql_client import KiekerClient
 
 

@@ -2,7 +2,7 @@ from enum import Enum
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 
-from model import GithubHistoryDict, GithubEventDict
+from collections import GithubEventDict, GithubHistoryDict
 
 
 class KiekerQuery(Enum):

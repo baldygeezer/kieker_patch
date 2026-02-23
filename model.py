@@ -4,35 +4,17 @@ from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 from pathlib import Path
-from typing import Self, TypedDict
+from typing import Self
 
 from prov.identifier import QualifiedName, Namespace
 
+from collections import GithubHistoryDict, JiraHistoryEventDict
 from loader import get_github_issue_history
 from user_lookup import github_user_from_name
 
 LOOKUP_PATH = Path("data/name_lookup.json")
 with LOOKUP_PATH.open("r", encoding="utf-8") as f:
     NAME_LOOKUP: dict[str, str] = json.load(f)
-
-
-class GithubEventDict(TypedDict):
-    event:str
-    event_type:str
-
-class GithubHistoryDict(TypedDict):
-    github_id:str
-    issue_iri: str
-    events:list[GithubEventDict]
-
-class JiraHistoryEventDict(TypedDict):
-    id:str
-    field: str
-    from_string: str
-    to_string: str
-    date: str
-    agent: str
-
 
 
 class ProvPubNameSpace(Enum):
