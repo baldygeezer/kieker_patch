@@ -14,7 +14,7 @@ class GithubHistoryDict(TypedDict):
 
 class JiraHistoryEventDict(TypedDict):
     id:str
-    field: str
+    fields: list[str]
     from_string: str
     to_string: str
     date: str
