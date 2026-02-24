@@ -111,6 +111,9 @@ class JiraIssue(Jira2ProvItem):
     github_history:list[GithubHistoryDict]
     jira_history:list[JiraHistoryItem]
 
+    def __post_init__(self) -> None:
+        self.jira_history.sort(key=lambda x: x.start)
+
     @property
     def github_reporter(self) -> str|None:
         return NAME_LOOKUP.get(self.reporter)
