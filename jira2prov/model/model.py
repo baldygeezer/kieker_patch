@@ -139,13 +139,6 @@ class JiraIssue(Jira2ProvItem):
         jira_key = issue["key"]
         jira_id =issue["id"]
         jira_history = [log for log in cls._process_changelog_items(issue)]
-        # changelog=[JiraHistoryEventDict(id=item["id"],
-        #                                 fields=item["items"],
-        #                                 to_string=item['items']["to_string"],
-        #                                 from_string=item['items']["from_string"],
-        #                                 agent=item["author"]["displayName"],
-        #                                 date=item['created']) for item in issue["changelog"]["histories"]]
-
         comments = [JiraComment.from_json(comment) for comment in comments]
         reporter = github_user_from_name(issue["reporter"])
         created=issue["created"]
