@@ -1,18 +1,9 @@
 import prov.model as model
-from prov.identifier import Namespace
 import uuid
-from jira2prov.model.model import ProvPubNameSpace
+from jira2prov.prov.provdoc import get_provdoc, ProvPubNameSpace
 from user_lookup import lookup
 from read_values import read_jsonl
 from prov.model import ProvDocument
-
-
-def get_provdoc()-> ProvDocument:
-    document = ProvDocument()
-    for ns_val in ProvPubNameSpace:
-        ns = Namespace(prefix=ns_val.prefix, uri=ns_val.url)
-        document.add_namespace(ns)
-    return document
 
 
 def run_patch(filename):
