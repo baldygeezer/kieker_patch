@@ -31,12 +31,16 @@ def get_jira_comments(comments_data:list[dict])->list[JiraComment]:
         jira_comments.append(jira_comment)
     return jira_comments
 
-def write_jira_prov(issue:JiraIssue,prov_doc:ProvDocument):
-    github_user=github_user_from_name(issue.reporter)
-    issue_id=issue.key
+def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
+    github_user=jira_issue.reporter
+    issue_id=jira_issue.key
 
     agent=prov_doc.agent(f"https://github.com/{github_user}")
     issue=prov_doc.entity(f"https://github.com/kieker-monitoring/kieker/issues/{issue_id}")
     issue.wasAttributedTo(agent)
+    for alt_issue in jira_issue.alternates:
+        alt=prov_doc.alternateOf(issue,alt_issue)
+
+
 
     "https://github.com/kieker-monitoring/kieker/issues/1000"
