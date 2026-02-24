@@ -128,7 +128,8 @@ class JiraIssue(Jira2ProvItem):
     key: str
     created: str
     reporter: str
-    comments: list[JiraComment]
+    # comments: list[JiraComment]
+    comments: dict[str,JiraComment]
     description:dict
     github_history:dict[str,GithubHistoryDict]
     jira_history:list[JiraHistoryItem]
@@ -165,7 +166,8 @@ class JiraIssue(Jira2ProvItem):
         jira_key = issue["key"]
         jira_id =issue["id"]
         jira_history = [log for log in cls._process_changelog_items(issue)]
-        comments = [JiraComment.from_json(comment) for comment in comments]
+        comments_list = [JiraComment.from_json(comment) for comment in comments]
+        comments = {comment.id:comment for comment in comments_list}
         reporter = github_user_from_name(issue["reporter"])
         created=issue["created"]
         gh_history=get_github_issue_history(jira_id=jira_key)
