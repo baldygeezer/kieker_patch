@@ -102,14 +102,37 @@ class JiraHistoryItem(Jira2ProvItem):
 
 @dataclass(frozen=True)
 class JiraIssue(Jira2ProvItem):
+    """the data for a Jira issue. This may map to more than one github issue.
+    :param id: the internal jira id
+    :type id: str
+    :param key: the id used in the issue url
+    :type key: str
+    :param created: the date string from the json data
+    :type created: str
+    :param reporter: github url of the reporter, the agent this issue will be attributed to
+    :type reporter: str
+    :param comments: a list of the comments mande on the issue
+    :type comments: list[JiraComment]
+    :param description: the description of the issue
+    :type description: str
+    :param github_history: a dict containing the history of the alternate issue/s on githhub. There can be duplicates of
+     the github issues, so this is a dict keyed with github issue ids
+     :type github_history: dict[str,list[dict]]
+     :param jira_history: a list of events in the jira issue history
+     :type jira_history:list[JiraHistoryItem]
+     :param alternates: a list of the alternate issues on github. most of the time there will only be one, but there
+     are sometimes duplicates
+     :type alternates: list[str]
+    """
     id: str
     key: str
     created: str
     reporter: str
     comments: list[JiraComment]
     description:dict
-    github_history:list[GithubHistoryDict]
+    github_history:dict[str,GithubHistoryDict]
     jira_history:list[JiraHistoryItem]
+    alternates:list[str]
 
     def __post_init__(self) -> None:
         self.jira_history.sort(key=lambda x: x.start)
@@ -133,7 +156,7 @@ class JiraIssue(Jira2ProvItem):
 
     @classmethod
     def from_json(cls, data) -> Self:
-        jira_id = None
+        # jira_id = None
         issue=None
         comments=[]
         for k,v in data.items():
@@ -146,6 +169,9 @@ class JiraIssue(Jira2ProvItem):
         reporter = github_user_from_name(issue["reporter"])
         created=issue["created"]
         gh_history=get_github_issue_history(jira_id=jira_key)
+        alternates=[]
+        for gh_issue in gh_history.keys():
+            alternates.append(f"https://github.com/kieker-monitoring/kieker/issues/{gh_issue}")
 
         return cls(id=jira_id,
                    key=jira_key,
@@ -154,10 +180,9 @@ class JiraIssue(Jira2ProvItem):
                    reporter=reporter,
                    github_history=gh_history,
                    description=issue["description"],
-                   jira_history=jira_history
+                   jira_history=jira_history,
+                   alternates=alternates
                    )
-
-
 
 
 class IssueEvents(Enum):
