@@ -9,8 +9,8 @@ from typing import Self
 
 from prov.identifier import QualifiedName
 
-from jira2prov.model.collections import GithubHistoryDict, JiraHistoryEventDict
 from jira2prov.loader import get_github_issue_history
+from jira2prov.model.collections import GithubHistoryDict, JiraHistoryEventDict
 from jira2prov.prov.provdoc import ProvPubNameSpace
 from read_values import process_content_block
 from user_lookup import github_user_from_name
@@ -23,10 +23,12 @@ with LOOKUP_PATH.open("r", encoding="utf-8") as f:
 class ghtp_types(Enum):
     COMMIT = QualifiedName(ProvPubNameSpace.GITHUB2PROV.namespace, "commit")
 
+
 class Jira2ProvItem(ABC):
     @classmethod
     def from_json(cls, data: dict) -> Self:
         pass
+
 
 @dataclass(frozen=True)
 class JiraComment(Jira2ProvItem):
@@ -34,8 +36,8 @@ class JiraComment(Jira2ProvItem):
     created: str
     body: str
     id: str
-    references:list
-    mentions:list
+    references: list
+    mentions: list
 
     @property
     def author_github(self) -> str:
@@ -43,16 +45,13 @@ class JiraComment(Jira2ProvItem):
 
     @classmethod
     def from_json(cls, data: dict) -> Self:
-        body, issue_refs, user_refs=process_content_block(data["body"]["content"])
+        body, issue_refs, user_refs = process_content_block(data["body"]["content"])
         return cls(author_name=data["author_name"],
                    created=data["created"],
                    body=body,
                    id=data["id"],
                    references=issue_refs,
                    mentions=user_refs)
-
-
-
 
 
 class Jira2Prov(Enum):
@@ -63,12 +62,12 @@ class Jira2Prov(Enum):
     FIXVERSION = "fixVersion"
     COMMENT = "Comment"
     # link to a remote entity that isn't an issue - eg. meeting minutes item
-    REMOTEISSUELINK= "RemoteIssueLink"
+    REMOTEISSUELINK = "RemoteIssueLink"
     # to another issue
-    LINK ="Link"
+    LINK = "Link"
 
     @property
-    def prefix(self)->str:
+    def prefix(self) -> str:
         pass
 
 
@@ -78,27 +77,29 @@ class JiraHistoryItem(Jira2ProvItem):
     type: str
     _start: str
     _end: str
-    agent:str
+    agent: str
 
     @classmethod
     def from_json(cls, history_item: JiraHistoryEventDict) -> Self:
         type = history_item["field"] + history_item["to_string"]
         return cls(id=history_item["id"],
                    type=type,
-                    _start=history_item["date"],
-                    _end=history_item["date"],
-                    agent=history_item["agent"])
+                   _start=history_item["date"],
+                   _end=history_item["date"],
+                   agent=history_item["agent"])
+
     @property
-    def github_agent(self)->str:
+    def github_agent(self) -> str:
         return NAME_LOOKUP.get(self.agent)
 
     @property
-    def start(self)->datetime:
+    def start(self) -> datetime:
         return datetime.strptime(self._start, "%Y-%m-%dT%H:%M:%S.%f%z")
 
     @property
-    def end(self)->datetime:
+    def end(self) -> datetime:
         return datetime.strptime(self._end, "%Y-%m-%dT%H:%M:%S.%f%z")
+
 
 @dataclass(frozen=True)
 class JiraIssue(Jira2ProvItem):
@@ -129,17 +130,17 @@ class JiraIssue(Jira2ProvItem):
     created: str
     reporter: str
     # comments: list[JiraComment]
-    comments: dict[str,JiraComment]
-    description:dict
-    github_history:dict[str,GithubHistoryDict]
-    jira_history:list[JiraHistoryItem]
-    alternates:list[str]
+    comments: dict[str, JiraComment]
+    description: dict
+    github_history: dict[str, GithubHistoryDict]
+    jira_history: list[JiraHistoryItem]
+    alternates: list[str]
 
     def __post_init__(self) -> None:
         self.jira_history.sort(key=lambda x: x.start)
 
     @property
-    def github_reporter(self) -> str|None:
+    def github_reporter(self) -> str | None:
         return NAME_LOOKUP.get(self.reporter)
 
     @classmethod
@@ -147,37 +148,37 @@ class JiraIssue(Jira2ProvItem):
         histories = issue["changelog"]["histories"]
         for history in histories:
             for item in history["items"]:
-                event=JiraHistoryEventDict(id=history["id"],
-                                            field=item["field"],
-                                            to_string=item["toString"],
-                                            from_string=item["fromString"],
-                                            agent=history["author"]["displayName"],
-                                            date=history['created'])
+                event = JiraHistoryEventDict(id=history["id"],
+                                             field=item["field"],
+                                             to_string=item["toString"],
+                                             from_string=item["fromString"],
+                                             agent=history["author"]["displayName"],
+                                             date=history['created'])
                 yield JiraHistoryItem.from_json(event)
 
     @classmethod
     def from_json(cls, data) -> Self:
         # jira_id = None
-        issue=None
-        comments=[]
-        for k,v in data.items():
-            issue=v["issue"]
-            comments=v["comments"]
+        issue = None
+        comments = []
+        for k, v in data.items():
+            issue = v["issue"]
+            comments = v["comments"]
         jira_key = issue["key"]
-        jira_id =issue["id"]
+        jira_id = issue["id"]
         jira_history = [log for log in cls._process_changelog_items(issue)]
         comments_list = [JiraComment.from_json(comment) for comment in comments]
-        comments = {comment.id:comment for comment in comments_list}
+        comments = {comment.id: comment for comment in comments_list}
         reporter = github_user_from_name(issue["reporter"])
-        created=issue["created"]
-        gh_history=get_github_issue_history(jira_id=jira_key)
-        alternates=[]
+        created = issue["created"]
+        gh_history = get_github_issue_history(jira_id=jira_key)
+        alternates = []
         for gh_issue in gh_history.keys():
             alternates.append(f"https://github.com/kieker-monitoring/kieker/issues/{gh_issue}")
 
         return cls(id=jira_id,
                    key=jira_key,
-                   comments = comments,
+                   comments=comments,
                    created=created,
                    reporter=reporter,
                    github_history=gh_history,
