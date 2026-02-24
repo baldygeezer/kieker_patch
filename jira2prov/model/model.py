@@ -1,15 +1,18 @@
+import datetime
 import json
 from abc import ABC
 from dataclasses import dataclass
-from datetime import date
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Self
 
-from prov.identifier import QualifiedName, Namespace
+from prov.identifier import QualifiedName
 
 from jira2prov.model.collections import GithubHistoryDict, JiraHistoryEventDict
 from jira2prov.loader import get_github_issue_history
+from jira2prov.prov.provdoc import ProvPubNameSpace
+from read_values import process_content_block
 from user_lookup import github_user_from_name
 
 LOOKUP_PATH = Path("data/name_lookup.json")
@@ -17,46 +20,8 @@ with LOOKUP_PATH.open("r", encoding="utf-8") as f:
     NAME_LOOKUP: dict[str, str] = json.load(f)
 
 
-class ProvPubNameSpace(Enum):
-    PARS = ("pars", "http://soton.ac.uk/pars#")
-    PPUB = ("ppub", "http://soton.ac.uk/provpub#")
-    ORCID = ("orcid", "https://orcid.org/")
-    DOI = ("doi", "https://doi.org/")
-    TIME = ("time", "http://www.w3.org/2006/time#")
-    SCORO = ("scoro", "http://purl.org/spar/scoro/")
-    PRO = ("pro", "http://purl.org/spar/pro/")
-    FOAF = ("foaf", "http://xmlns.com/foaf/0.1/")
-    PROV = ("prov", "http://www.w3.org/ns/prov#")
-    FABIO = ("fabio", "http://purl.org/spar/fabio/")
-    OWL = ("owl", "http://www.w3.org/2002/07/owl#")
-    GITHUB2PROV = ("github2prov", "http://purl.org/github2prov/")
-    KIEKER = ("kieker-monitoring_kieker", "https://github.com/kieker-monitoring/kieker/")
-    COMMITS = ("commits_uri", "https://api.github.com/repos/kieker-monitoring/kieker/commits/")
-    PULLS = ("pulls_uri", "https://github.com/kieker-monitoring/kieker/pull/")
-    USERS = ("users", "https://github.com/")
-    RDFS = ("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-    XSD = ("xsd", "http://www.w3.org/2001/XMLSchema#")
-
-    @property
-    def prefix(self):
-        return self.value[0]  # First item in the tuple
-
-    @property
-    def url(self):
-        return self.value[1]
-
-    @property
-    def namespace(self)->Namespace:
-        return Namespace(prefix=self.prefix, uri=self.url)
-
-    @property
-    def q_name(self)->QualifiedName:
-        return QualifiedName(namespace=self.namespace,localpart=self.prefix)
-
-
-
 class ghtp_types(Enum):
-    COMMIT = QualifiedName(ProvPubNameSpace.GITHUB2PROV.namespace,"commit")
+    COMMIT = QualifiedName(ProvPubNameSpace.GITHUB2PROV.namespace, "commit")
 
 class Jira2ProvItem(ABC):
     @classmethod
@@ -70,14 +35,24 @@ class JiraComment(Jira2ProvItem):
     body: str
     id: str
     references:list
+    mentions:list
 
     @property
     def author_github(self) -> str:
         return NAME_LOOKUP.get(self.author_name)
 
     @classmethod
-    def from_json(self, data: dict) -> Self:
-        pass
+    def from_json(cls, data: dict) -> Self:
+        body, issue_refs, user_refs=process_content_block(data["body"]["content"])
+        return cls(author_name=data["author_name"],
+                   created=data["created"],
+                   body=body,
+                   id=data["id"],
+                   references=issue_refs,
+                   mentions=user_refs)
+
+
+
 
 
 class Jira2Prov(Enum):
@@ -118,11 +93,12 @@ class JiraHistoryItem(Jira2ProvItem):
         return NAME_LOOKUP.get(self.agent)
 
     @property
-    def start(self)->date:
-        return date.fromisoformat(self._start)
+    def start(self)->datetime:
+        return datetime.strptime(self._start, "%Y-%m-%dT%H:%M:%S.%f%z")
+
     @property
-    def end(self)->date:
-        return date.fromisoformat(self._end)
+    def end(self)->datetime:
+        return datetime.strptime(self._end, "%Y-%m-%dT%H:%M:%S.%f%z")
 
 @dataclass(frozen=True)
 class JiraIssue(Jira2ProvItem):
@@ -132,37 +108,48 @@ class JiraIssue(Jira2ProvItem):
     reporter: str
     comments: list[JiraComment]
     description:dict
-    changelog:list
     github_history:list[GithubHistoryDict]
-    _jira_history:list[JiraHistoryItem]
+    jira_history:list[JiraHistoryItem]
 
     @property
     def github_reporter(self) -> str|None:
         return NAME_LOOKUP.get(self.reporter)
 
-    # @property
-    # def created(self)->str:
-    #     return ''
+    @classmethod
+    def _process_changelog_items(cls, issue: dict):
+        histories = issue["changelog"]["histories"]
+        for history in histories:
+            for item in history["items"]:
+                event=JiraHistoryEventDict(id=history["id"],
+                                            field=item["field"],
+                                            to_string=item["toString"],
+                                            from_string=item["fromString"],
+                                            agent=history["author"]["displayName"],
+                                            date=history['created'])
+                yield JiraHistoryItem.from_json(event)
 
     @classmethod
     def from_json(cls, data) -> Self:
         jira_id = None
         issue=None
+        comments=[]
         for k,v in data.items():
             issue=v["issue"]
+            comments=v["comments"]
         jira_key = issue["key"]
         jira_id =issue["id"]
+        jira_history = [log for log in cls._process_changelog_items(issue)]
+        # changelog=[JiraHistoryEventDict(id=item["id"],
+        #                                 fields=item["items"],
+        #                                 to_string=item['items']["to_string"],
+        #                                 from_string=item['items']["from_string"],
+        #                                 agent=item["author"]["displayName"],
+        #                                 date=item['created']) for item in issue["changelog"]["histories"]]
 
-        changelog=[JiraHistoryEventDict(id=item["id"],
-                                        fields=item["items"],
-                                        to_string=item['items']["to_string"],
-                                        from_string=item['items']["from_string"],
-                                        agent=item["author"]["displayName"],
-                                        date=item['created']) for item in issue["changelog"]["histories"]]
-        comments = [JiraComment.from_json(comment) for comment in issue["comments"]]
+        comments = [JiraComment.from_json(comment) for comment in comments]
         reporter = github_user_from_name(issue["reporter"])
         created=issue["created"]
-        gh_history=get_github_issue_history(jira_id=jira_id)
+        gh_history=get_github_issue_history(jira_id=jira_key)
 
         return cls(id=jira_id,
                    key=jira_key,
@@ -170,9 +157,8 @@ class JiraIssue(Jira2ProvItem):
                    created=created,
                    reporter=github_user_from_name(reporter),
                    github_history=gh_history,
-                  _jira_history=[JiraHistoryItem.from_json(item) for item in changelog],
                    description=issue["description"],
-                   changelog=changelog
+                   jira_history=jira_history
                    )
 
 
