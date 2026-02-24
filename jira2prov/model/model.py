@@ -151,7 +151,7 @@ class JiraIssue(Jira2ProvItem):
                    key=jira_key,
                    comments = comments,
                    created=created,
-                   reporter=github_user_from_name(reporter),
+                   reporter=reporter,
                    github_history=gh_history,
                    description=issue["description"],
                    jira_history=jira_history
