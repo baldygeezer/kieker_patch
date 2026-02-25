@@ -1,3 +1,4 @@
+import uuid
 from enum import Enum
 
 from prov.model import ProvDocument
@@ -47,3 +48,8 @@ class ProvPubNameSpace(Enum):
     @property
     def q_name(self)->QualifiedName:
         return QualifiedName(namespace=self.namespace,localpart=self.prefix)
+
+
+def get_uuid5(value: str) -> str:
+    ns = uuid.uuid5(uuid.NAMESPACE_URL, ProvPubNameSpace.PARS.url)
+    return str(uuid.uuid5(ns, value))
