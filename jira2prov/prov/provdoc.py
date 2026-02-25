@@ -23,6 +23,7 @@ class Jira2ProvNamespace(Enum):
     PRO = ("pro", "http://purl.org/spar/pro/")
     FOAF = ("foaf", "http://xmlns.com/foaf/0.1/")
     PROV = ("prov", "http://www.w3.org/ns/prov#")
+    JIRA2PROV = ("jira2prov", "http://purl.org/jira2prov/")
     FABIO = ("fabio", "http://purl.org/spar/fabio/")
     OWL = ("owl", "http://www.w3.org/2002/07/owl#")
     GITHUB2PROV = ("github2prov", "http://purl.org/github2prov/")
@@ -45,9 +46,9 @@ class Jira2ProvNamespace(Enum):
     def namespace(self)->Namespace:
         return Namespace(prefix=self.prefix, uri=self.url)
 
-    @property
-    def q_name(self)->QualifiedName:
-        return QualifiedName(namespace=self.namespace,localpart=self.prefix)
+
+    def q_name(self,local_part:str)->QualifiedName:
+        return QualifiedName(namespace=self.namespace,localpart=local_part)
 
 
 def get_uuid5(value: str) -> str:
