@@ -7,13 +7,13 @@ from prov.identifier import Namespace, QualifiedName
 
 def get_provdoc()-> ProvDocument:
     document = ProvDocument()
-    for ns_val in ProvPubNameSpace:
+    for ns_val in Jira2ProvNamespace:
         ns = Namespace(prefix=ns_val.prefix, uri=ns_val.url)
         document.add_namespace(ns)
     return document
 
 
-class ProvPubNameSpace(Enum):
+class Jira2ProvNamespace(Enum):
     PARS = ("pars", "http://soton.ac.uk/pars#")
     PPUB = ("ppub", "http://soton.ac.uk/provpub#")
     ORCID = ("orcid", "https://orcid.org/")
@@ -51,5 +51,5 @@ class ProvPubNameSpace(Enum):
 
 
 def get_uuid5(value: str) -> str:
-    ns = uuid.uuid5(uuid.NAMESPACE_URL, ProvPubNameSpace.PARS.url)
+    ns = uuid.uuid5(uuid.NAMESPACE_URL, Jira2ProvNamespace.PARS.url)
     return str(uuid.uuid5(ns, value))

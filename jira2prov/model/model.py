@@ -11,7 +11,7 @@ from prov.identifier import QualifiedName
 
 from jira2prov.loader import get_github_issue_history
 from jira2prov.model.collections import GithubHistoryDict, JiraHistoryEventDict
-from jira2prov.prov.provdoc import ProvPubNameSpace
+from jira2prov.prov.provdoc import Jira2ProvNamespace
 from read_values import process_content_block
 from user_lookup import github_user_from_name
 
@@ -22,7 +22,7 @@ with LOOKUP_PATH.open("r", encoding="utf-8") as f:
 
 
 class ghtp_types(Enum):
-    COMMIT = QualifiedName(ProvPubNameSpace.GITHUB2PROV.namespace, "commit")
+    COMMIT = QualifiedName(Jira2ProvNamespace.GITHUB2PROV.namespace, "commit")
 
 
 class Jira2ProvItem(ABC):

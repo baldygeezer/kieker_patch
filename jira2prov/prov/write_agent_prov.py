@@ -3,7 +3,7 @@ import uuid
 import prov.model as model
 from prov.model import ProvDocument
 
-from jira2prov.prov.provdoc import get_provdoc, ProvPubNameSpace
+from jira2prov.prov.provdoc import get_provdoc, Jira2ProvNamespace
 from read_values import read_jsonl
 from user_lookup import lookup
 
@@ -40,7 +40,7 @@ def write_agent(commit: dict, type: str, provdoc: ProvDocument):
 
 
 def mint_non_github_agent(user_value: str, provdoc: ProvDocument, name: str) -> model.ProvAgent:
-    ns = uuid.uuid5(uuid.NAMESPACE_URL, ProvPubNameSpace.PARS.url)
+    ns = uuid.uuid5(uuid.NAMESPACE_URL, Jira2ProvNamespace.PARS.url)
     user_hash = uuid.uuid5(ns, user_value)
-    url = f"{ProvPubNameSpace.PARS.url}{user_hash}"
+    url = f"{Jira2ProvNamespace.PARS.url}{user_hash}"
     return provdoc.agent(url, other_attributes={"foaf:name": name})
