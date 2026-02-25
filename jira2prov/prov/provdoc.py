@@ -27,6 +27,7 @@ class Jira2ProvNamespace(Enum):
     FABIO = ("fabio", "http://purl.org/spar/fabio/")
     OWL = ("owl", "http://www.w3.org/2002/07/owl#")
     GITHUB2PROV = ("github2prov", "http://purl.org/github2prov/")
+    ISSUES = ("issues_url","https://kieker-monitoring.atlassian.net/browse/")
     KIEKER = ("kieker-monitoring_kieker", "https://github.com/kieker-monitoring/kieker/")
     COMMITS = ("commits_uri", "https://api.github.com/repos/kieker-monitoring/kieker/commits/")
     PULLS = ("pulls_uri", "https://github.com/kieker-monitoring/kieker/pull/")
