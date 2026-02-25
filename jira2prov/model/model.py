@@ -16,6 +16,7 @@ from read_values import process_content_block
 from user_lookup import github_user_from_name
 
 LOOKUP_PATH = Path("data/name_lookup.json")
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
 with LOOKUP_PATH.open("r", encoding="utf-8") as f:
     NAME_LOOKUP: dict[str, str] = json.load(f)
 
@@ -33,7 +34,7 @@ class Jira2ProvItem(ABC):
 @dataclass(frozen=True)
 class JiraComment(Jira2ProvItem):
     author_name: str
-    created: str
+    created: datetime
     body: str
     id: str
     references: list
@@ -46,8 +47,9 @@ class JiraComment(Jira2ProvItem):
     @classmethod
     def from_json(cls, data: dict) -> Self:
         body, issue_refs, user_refs = process_content_block(data["body"]["content"])
+        created = datetime.strptime(data["created"], DATE_FORMAT)
         return cls(author_name=data["author_name"],
-                   created=data["created"],
+                   created=created,
                    body=body,
                    id=data["id"],
                    references=issue_refs,
@@ -75,33 +77,30 @@ class Jira2Prov(Enum):
 class JiraHistoryItem(Jira2ProvItem):
     id: str
     type: str
-    _start: str
-    _end: str
+    start: datetime
+    end: datetime
     agent: str
 
     @classmethod
     def from_json(cls, history_item: JiraHistoryEventDict) -> Self:
         type = history_item["field"] + history_item["to_string"]
+        start = datetime.strptime(history_item["date"], DATE_FORMAT)
+        end = datetime.strptime(history_item["date"], DATE_FORMAT)
         return cls(id=history_item["id"],
                    type=type,
-                   _start=history_item["date"],
-                   _end=history_item["date"],
+                   start=start,
+                   end=end,
                    agent=history_item["agent"])
 
     @property
     def github_agent(self) -> str:
         return NAME_LOOKUP.get(self.agent)
 
-    @property
-    def start(self) -> datetime:
-        return datetime.strptime(self._start, "%Y-%m-%dT%H:%M:%S.%f%z")
-
-    @property
-    def end(self) -> datetime:
-        return datetime.strptime(self._end, "%Y-%m-%dT%H:%M:%S.%f%z")
 
 
-@dataclass(frozen=True)
+
+
+@dataclass()
 class JiraIssue(Jira2ProvItem):
     """the data for a Jira issue. This may map to more than one github issue.
     :param id: the internal jira id
@@ -127,7 +126,7 @@ class JiraIssue(Jira2ProvItem):
     """
     id: str
     key: str
-    created: str
+    created: datetime
     reporter: str
     # comments: list[JiraComment]
     comments: dict[str, JiraComment]
@@ -137,6 +136,14 @@ class JiraIssue(Jira2ProvItem):
     alternates: list[str]
 
     def __post_init__(self) -> None:
+        for ident, comment in self.comments.items():
+            comment_event = JiraHistoryItem(id=ident,
+                                            type="comment",
+                                            start=comment.created,
+                                            end=comment.created,
+                                            agent=comment.author_name)
+            self.jira_history.append(comment_event)
+        print(len(self.jira_history))
         self.jira_history.sort(key=lambda x: x.start)
 
     @property
