@@ -55,13 +55,15 @@ class JiraComment(Jira2ProvItem):
                    references=issue_refs,
                    mentions=user_refs)
 
+
 def _item_type(field: str, to_string) -> str:
     item_type = ""
     if field in ["status", "resolution"]:
         item_type = field + to_string
     else:
         item_type = field
-    return item_type.replace(" ","")
+    return item_type.replace(" ", "")
+
 
 class Jira2Prov(Enum):
     """not in use, may never be"""
@@ -93,7 +95,7 @@ class JiraHistoryItem(Jira2ProvItem):
         start = datetime.strptime(history_item["date"], DATE_FORMAT)
         end = datetime.strptime(history_item["date"], DATE_FORMAT)
         return cls(id=history_item["id"],
-                   type=_item_type(field=history_item["field"] , to_string=history_item["to_string"]),
+                   type=_item_type(field=history_item["field"], to_string=history_item["to_string"]),
                    start=start,
                    end=end,
                    agent=history_item["agent"])
@@ -101,9 +103,6 @@ class JiraHistoryItem(Jira2ProvItem):
     @property
     def github_agent(self) -> str:
         return NAME_LOOKUP.get(self.agent)
-
-
-
 
 
 @dataclass()
