@@ -31,7 +31,7 @@ class Jira2ProvItem(ABC):
         pass
 
 
-@dataclass(frozen=True)
+@dataclass()
 class JiraComment(Jira2ProvItem):
     author_name: str
     created: datetime
@@ -39,10 +39,13 @@ class JiraComment(Jira2ProvItem):
     id: str
     references: list
     mentions: list
+    _github_author:str|None
 
     @property
-    def author_github(self) -> str:
-        return NAME_LOOKUP.get(self.author_name)
+    def github_author(self) -> str:
+        if not self._github_author:
+            self._github_author = github_user_from_name(self.author_name)
+        return self._github_author
 
     @classmethod
     def from_json(cls, data: dict) -> Self:
@@ -53,7 +56,8 @@ class JiraComment(Jira2ProvItem):
                    body=body,
                    id=data["id"],
                    references=issue_refs,
-                   mentions=user_refs)
+                   mentions=user_refs,
+                   _github_author=None)
 
 
 def _item_type(field: str, to_string) -> str:
@@ -82,13 +86,14 @@ class Jira2Prov(Enum):
         pass
 
 
-@dataclass(frozen=True)
+@dataclass()
 class JiraHistoryItem(Jira2ProvItem):
     id: str
     type: str
     start: datetime
     end: datetime
     agent: str
+    _github_agent: str|None
 
     @classmethod
     def from_json(cls, history_item: JiraHistoryEventDict) -> Self:
@@ -98,11 +103,15 @@ class JiraHistoryItem(Jira2ProvItem):
                    type=_item_type(field=history_item["field"], to_string=history_item["to_string"]),
                    start=start,
                    end=end,
-                   agent=history_item["agent"])
+                   agent=history_item["agent"],
+                   _github_agent=None)
 
     @property
     def github_agent(self) -> str:
-        return NAME_LOOKUP.get(self.agent)
+        if not self._github_agent:
+            self._github_agent = github_user_from_name(self.agent)
+        return self._github_agent
+        return github_user_from_name(self.agent)
 
 
 @dataclass()
@@ -133,7 +142,7 @@ class JiraIssue(Jira2ProvItem):
     key: str
     created: datetime
     reporter: str
-    # comments: list[JiraComment]
+    _github_reporter:str|None
     comments: dict[str, JiraComment]
     description: dict
     github_history: dict[str, GithubHistoryDict]
@@ -146,14 +155,17 @@ class JiraIssue(Jira2ProvItem):
                                             type="comment",
                                             start=comment.created,
                                             end=comment.created,
-                                            agent=comment.author_name)
+                                            agent=comment.author_name,
+                                            _github_agent=None)
             self.jira_history.append(comment_event)
-        print(len(self.jira_history))
+
         self.jira_history.sort(key=lambda x: x.start)
 
     @property
-    def github_reporter(self) -> str | None:
-        return NAME_LOOKUP.get(self.reporter)
+    def github_reporter(self) -> str:
+        if not self._github_reporter:
+            self._github_reporter = github_user_from_name(self.reporter)
+        return self._github_reporter
 
     @classmethod
     def _process_changelog_items(cls, issue: dict):
@@ -181,7 +193,7 @@ class JiraIssue(Jira2ProvItem):
         jira_history = [log for log in cls._process_changelog_items(issue)]
         comments_list = [JiraComment.from_json(comment) for comment in comments]
         comments = {comment.id: comment for comment in comments_list}
-        reporter = github_user_from_name(issue["reporter"])
+        reporter = issue["reporter"]
         created = issue["created"]
         gh_history = get_github_issue_history(jira_id=jira_key)
         alternates = []
@@ -196,7 +208,8 @@ class JiraIssue(Jira2ProvItem):
                    github_history=gh_history,
                    description=issue["description"],
                    jira_history=jira_history,
-                   alternates=alternates
+                   alternates=alternates,
+                   _github_reporter=None
                    )
 
 
