@@ -35,19 +35,21 @@ lookup_cased={
 "Imran Asad Gul" : "mailto:iag@informatik.uni-kiel.de",
 "Reiner Jung":"rju"
 }
+
 lookup={
-"andre van hoorn": "avanhoorn",
+"david georg reichelt": "DaGeRe",
+"andre van hoorn" : "avanhoorn",
 "andré van hoorn" : "avanhoorn",
 "bjoern weissenfels" : "mailto:bjw@informatik.uni-kiel.de",
-"christian wulf" : "christianwulf",
+"christian wulf" : "ChristianWulf",
 "christian zirkelbach": "czirkelbach",
 "christian" : "czirkelbach",
-"christianwulf" : "christianwulf",
+"christianwulf" : "ChristianWulf",
 "clemens kurz": "cbkurz",
 "danish manzoor" : "danishmanzoor",
 "dennis kieselhorst" : "deki",
 "duellmtk@studi.informatik.uni-stuttgart.de" : "duelle",
-"florian fittkau" : "ffittkau",
+"florian fittkau" : "FFittkau",
 "github" : "github",
 "henry grow" : "mailto:hgr@informatik.uni-kiel.de",
 "holger knoche" : "holgerknoche",
@@ -71,16 +73,16 @@ lookup={
 
 def github_user_from_name(real_name: str) -> str|None:
     normalised_name=real_name.strip().lower()
-    github_user= lookup.get(normalised_name)
+    github_user = lookup.get(normalised_name)
     if github_user is not None:
         return f"https://github.com/{github_user}"
-    _log_name_not_found(real_name)
-    print("WARNING: name not found in lookup. Check the log")
+    _log_name_not_found(github_user=github_user,real_name=real_name)
+    print(f"WARNING: github user for {real_name} not found in lookup. Check the log")
     return f"https://github.com/{normalised_name.strip(" ")}"
 
-def _log_name_not_found(real_name: str):
-    if not real_name:
-        with MISSING_NAMES_LOG.open("r") as log:
+def _log_name_not_found(github_user: str|None, real_name: str) -> None:
+    if not github_user:
+        with MISSING_NAMES_LOG.open("a") as log:
             log.write(real_name+"\n")
 
 
