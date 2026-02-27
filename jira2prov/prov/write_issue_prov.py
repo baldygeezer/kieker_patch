@@ -55,38 +55,49 @@ def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
                                other_attributes={PROV_ROLE: Jira2ProvNamespace.JIRA2PROV.q_name('actor')})
     created.wasAssociatedWith(agent)
 
-
     #store the previous event which generated the current version, which is the creation to start with, then update
     # these from the loop
     previous_event=created
     previous_event_start=jira_issue.created
-    previous_event_version=None
+    previous_version=None
+    previous_version_double_event=None
     version_number=1 #start at version 1
+
     for jira_event in jira_issue.jira_history:
-        event_id=get_uuid5(jira_event.id + jira_event.type + str(jira_event.start)) #BUG!!!!!!!! if type is the same for simultanious events???
-        event=prov_doc.activity(identifier=Jira2ProvNamespace.ISSUES.q_name(f"{jira_issue.key}/events/{event_id}"),
-                                startTime=jira_event.start,endTime=jira_event.end,
-                                other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type)})
 
-        if previous_event_version:# there won't be if this is version 1
-            event.used(previous_event_version)
+        event_id = get_uuid5(jira_event.id + jira_event.type + str(jira_event.start))  # BUG!!!!!!!! if type is the same for simultanious events???
+        event = prov_doc.activity(identifier=Jira2ProvNamespace.ISSUES.q_name(f"{jira_issue.key}/events/{event_id}"),
+                                  startTime=jira_event.start, endTime=jira_event.end,
+                                  other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type)})
 
-        agent=prov_doc.agent(f"https://github.com/{jira_event.github_agent}")
-        asc=prov_doc.association(activity=event,
-                                 agent=agent,
-                                 other_attributes={PROV_ROLE:Jira2ProvNamespace.JIRA2PROV.q_name('actor')})
+        agent = prov_doc.agent(f"https://github.com/{jira_event.github_agent}")
+        asc = prov_doc.association(activity=event,
+                                   agent=agent,
+                                   other_attributes={PROV_ROLE: Jira2ProvNamespace.JIRA2PROV.q_name('actor')})
         event.wasAssociatedWith(agent)
-        this_version=prov_doc.entity(identifier=Jira2ProvNamespace.ISSUES.q_name(f"{jira_issue.key}#{version_number}"),
-                                     other_attributes={"prov:type":Jira2ProvNamespace.JIRA2PROV.q_name("issue_version")})
-        this_version.wasGeneratedBy(previous_event)
-        this_version.specializationOf(issue)
 
+        if jira_event.start == previous_event_start:
+            this_version=previous_version
+            previous_version=previous_version_double_event
+            event.used(previous_version)
+            previous_version=this_version
+        else:
+            this_version=prov_doc.entity(identifier=Jira2ProvNamespace.ISSUES.q_name(f"{jira_issue.key}#{version_number}"),
+                                         other_attributes={"prov:type":Jira2ProvNamespace.JIRA2PROV.q_name("issue_version")})
+            previous_version_double_event=previous_version
+            if previous_version:  # there won't be if this is version 1
+                event.used(previous_version)
+            previous_version = this_version
+            version_number += 1
+
+
+        this_version.specializationOf(issue)
+        this_version.wasGeneratedBy(event)
         # get ready for the next iteration - these must always be at the very end
         # if we have two simultaneous events they both create the bext version. if not, increment the version
-        if jira_event.start != previous_event_start:
-            version_number+=1
-            previous_event_version = this_version
-            previous_event=event
+
+        previous_event=event
+        #OUTSIDE the if statement at the end of the loop iteration!!!!!
         previous_event_start=jira_event.start
 
 
