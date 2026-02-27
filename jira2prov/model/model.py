@@ -194,7 +194,7 @@ class JiraIssue(Jira2ProvItem):
         comments_list = [JiraComment.from_json(comment) for comment in comments]
         comments = {comment.id: comment for comment in comments_list}
         reporter = issue["reporter"]
-        created = issue["created"]
+        created = datetime.strptime(issue["created"], DATE_FORMAT)
         gh_history = get_github_issue_history(jira_id=jira_key)
         alternates = []
         for gh_issue in gh_history.keys():
