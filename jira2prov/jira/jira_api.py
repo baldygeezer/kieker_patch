@@ -27,7 +27,7 @@ class JiraClient:
         sesh.mount("https://", HTTPAdapter(max_retries=retries, pool_connections=5, pool_maxsize=5))
         sesh.headers.update({
             "Accept": "application/json",
-            "User-Agent": "Metascience research (+contact: b.roper@soton.ac.uk)",
+            "User-Agent": "Metascience Research (+contact: b.roper@soton.ac.uk)",
         })
         self._session = sesh
 
@@ -52,7 +52,7 @@ class JiraClient:
             "changelog": json.get("changelog", {})
         }
 
-    def get_issue_comments(self, issue_url: str, page_size=2) -> list[dict]:
+    def get_issue_comments(self, issue_url: str, page_size=100) -> list[dict]:
         comments_url = issue_url + "/comment"
         page_start = 0
         results = []
