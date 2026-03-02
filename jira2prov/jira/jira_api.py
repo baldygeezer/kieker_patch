@@ -6,15 +6,15 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-data_dump = Path(__file__).parent / "data/jira_issues_dump/issues.jsonl"
-input_list = Path(__file__).parent / "data/issues_list.txt"
+# data_dump = Path(__file__).parent / "data/jira_issues_dump/issues.jsonl"
+# input_list = Path(__file__).parent / "data/issues_list.txt"
 
 
 @dataclass
 class JiraClient:
     base_url: str
     _session: requests.Session = field(init=False, repr=False)
-
+    data_dump: Path
     def __post_init__(self):
         sesh = requests.Session()
         retries = Retry(
@@ -99,7 +99,7 @@ class JiraClient:
         return {"issue": base_issue, "comments": base_issue_comments}
 
     def dump_jira_data(self, jira_issue_id: str) -> dict:
-        with data_dump.open("a") as dump:
+        with self.data_dump.open("a") as dump:
             issue_dict = self.get_jira_issue(jira_issue_id)
             json.dump({jira_issue_id: issue_dict}, dump)
             dump.write("\n")
