@@ -64,11 +64,21 @@ def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
     version_number=1 #start at version 1
 
     for jira_event in jira_issue.jira_history:
+        event_attributes = {"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type)}
+
+        if jira_event.type=="comment":
+            jira_comment=jira_issue.comments.get(jira_event.id)
+            mentions=len(jira_comment.mentions)
+            refs=len(jira_comment.references)
+            event_attributes["jira2prov:mentions"]=mentions
+            event_attributes["jira2prov:refs"]=refs
+
 
         event_id = get_uuid5(jira_event.id + jira_event.type + str(jira_event.start))  # BUG!!!!!!!! if type is the same for simultanious events???
         event = prov_doc.activity(identifier=Jira2ProvNamespace.ISSUES.q_name(f"{jira_issue.key}/events/{event_id}"),
                                   startTime=jira_event.start, endTime=jira_event.end,
-                                  other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type)})
+                                  # other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type)})
+                                  other_attributes=event_attributes)
 
         agent = prov_doc.agent(f"https://github.com/{jira_event.github_agent}")
         asc = prov_doc.association(activity=event,
