@@ -34,7 +34,7 @@ class JiraClient:
 
     def _get_base_issue(self, issue_url: str) -> dict:
         # url=f"{self.base_url}/rest/api/3/issue/{key}"
-        params = {"fields": "created, reporter, description, changelog",
+        params = {"fields": "created,reporter,description,changelog",
                   "expand": "changelog"}
         response = self.session.get(issue_url, params=params, timeout=30)
         response.raise_for_status()
