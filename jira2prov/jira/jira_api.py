@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import requests
@@ -10,12 +10,12 @@ data_dump = Path(__file__).parent / "data/jira_issues_dump/issues.jsonl"
 input_list = Path(__file__).parent / "data/issues_list.txt"
 
 
-@dataclass(frozen=True)
+@dataclass
 class JiraClient:
     base_url: str
+    _session: requests.Session = field(init=False, repr=False)
 
-    @property
-    def session(self) -> requests.Session:
+    def __post_init__(self):
         sesh = requests.Session()
         retries = Retry(
             total=5,
@@ -26,7 +26,11 @@ class JiraClient:
         )
         sesh.mount("https://", HTTPAdapter(max_retries=retries, pool_connections=5, pool_maxsize=5))
         sesh.headers.update({"Accept": "application/json"})
-        return sesh
+        self._session = sesh
+
+    @property
+    def session(self) -> requests.Session:
+        return self._session
 
     def _get_base_issue(self, issue_url: str) -> dict:
         # url=f"{self.base_url}/rest/api/3/issue/{key}"
@@ -94,7 +98,6 @@ class JiraClient:
     def dump_jira_data(self, jira_issue_id: str) -> dict:
         with data_dump.open("a") as dump:
             issue_dict = self.get_jira_issue(jira_issue_id)
-
             json.dump({jira_issue_id: issue_dict}, dump)
             dump.write("\n")
 
