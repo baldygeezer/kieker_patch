@@ -127,8 +127,8 @@ class JiraIssue(Jira2ProvItem):
     :type created: str
     :param reporter: github url of the reporter, the agent this issue will be attributed to
     :type reporter: str
-    :param comments: a list of the comments mande on the issue
-    :type comments: list[JiraComment]
+    :param comments: a dict of the comments mande on the issue
+    :type comments: dict[string:JiraComment]
     :param description: the description of the issue
     :type description: str
     :param github_history: a dict containing the history of the alternate issue/s on githhub. There can be duplicates of
