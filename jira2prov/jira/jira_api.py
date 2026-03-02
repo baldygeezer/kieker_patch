@@ -25,7 +25,10 @@ class JiraClient:
             raise_on_status=False,
         )
         sesh.mount("https://", HTTPAdapter(max_retries=retries, pool_connections=5, pool_maxsize=5))
-        sesh.headers.update({"Accept": "application/json"})
+        sesh.headers.update({
+            "Accept": "application/json",
+            "User-Agent": "Metascience research (+contact: b.roper@soton.ac.uk)",
+        })
         self._session = sesh
 
     @property
