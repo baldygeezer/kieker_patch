@@ -10,7 +10,7 @@ from typing import Self
 from prov.identifier import QualifiedName
 
 from jira2prov.loader import get_github_issue_history
-from jira2prov.model.collections import GithubHistoryDict, JiraHistoryEventDict
+from jira2prov.model.collections import GithubHistoryDict, JiraHistoryEventDict, JiraIssueDescriptionDict
 from jira2prov.prov.provdoc import Jira2ProvNamespace
 from read_values import process_content_block
 from user_lookup import github_user_from_name
@@ -115,6 +115,11 @@ class JiraHistoryItem(Jira2ProvItem):
         return self._github_agent
         return github_user_from_name(self.agent)
 
+def _process_description(desc:dict) -> JiraIssueDescriptionDict:
+    body, refs, mentions = process_content_block(desc["content"])
+    return JiraIssueDescriptionDict(body=body,
+                                   refs=refs,
+                                   mentions=mentions)
 
 @dataclass()
 class JiraIssue(Jira2ProvItem):
@@ -130,15 +135,15 @@ class JiraIssue(Jira2ProvItem):
     :param comments: a dict of the comments mande on the issue
     :type comments: dict[string:JiraComment]
     :param description: the description of the issue
-    :type description: str
+    :type description: JiraIssueDescriptionDict
     :param github_history: a dict containing the history of the alternate issue/s on githhub. There can be duplicates of
      the github issues, so this is a dict keyed with github issue ids
-     :type github_history: dict[str,list[dict]]
-     :param jira_history: a list of events in the jira issue history
-     :type jira_history:list[JiraHistoryItem]
-     :param alternates: a list of the alternate issues on github. most of the time there will only be one, but there
+    :type github_history: dict[str,list[dict]]
+    :param jira_history: a list of events in the jira issue history
+    :type jira_history:list[JiraHistoryItem]
+    :param alternates: a list of the alternate issues on github. most of the time there will only be one, but there
      are sometimes duplicates
-     :type alternates: list[str]
+    :type alternates: list[str]
     """
     id: str
     key: str
@@ -146,7 +151,7 @@ class JiraIssue(Jira2ProvItem):
     reporter: str
     _github_reporter:str|None
     comments: dict[str, JiraComment]
-    description: dict
+    description: JiraIssueDescriptionDict
     github_history: dict[str, GithubHistoryDict]
     jira_history: list[JiraHistoryItem]
     alternates: list[str]
@@ -192,6 +197,7 @@ class JiraIssue(Jira2ProvItem):
             comments = v["comments"]
         jira_key = issue["key"]
         jira_id = issue["id"]
+        description = _process_description(issue["description"])
         jira_history = [log for log in cls._process_changelog_items(issue)]
         comments_list = [JiraComment.from_json(comment) for comment in comments]
         comments = {comment.id: comment for comment in comments_list}
@@ -208,7 +214,7 @@ class JiraIssue(Jira2ProvItem):
                    created=created,
                    reporter=reporter,
                    github_history=gh_history,
-                   description=issue["description"],
+                   description=description,
                    jira_history=jira_history,
                    alternates=alternates,
                    _github_reporter=None
