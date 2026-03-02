@@ -19,3 +19,9 @@ class JiraHistoryEventDict(TypedDict):
     to_string: str
     date: str
     agent: str
+
+class JiraIssueDescriptionDict(TypedDict):
+    body: str
+    refs: list[str]
+    mentions: list[str]
+
