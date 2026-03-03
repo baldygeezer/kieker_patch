@@ -33,7 +33,10 @@ lookup_cased={
 "Christian Wulf" : "ChristianWulf",
 "Henry Grow" : "mailto:hgr@informatik.uni-kiel.de",
 "Imran Asad Gul" : "mailto:iag@informatik.uni-kiel.de",
-"Reiner Jung":"rju"
+"Reiner Jung":"rju",
+    "robin finkbeiner":"renderfehler",
+    "Sebastian Harner": "Rackles"
+
 }
 
 lookup={
@@ -41,6 +44,7 @@ lookup={
 "andre van hoorn" : "avanhoorn",
 "andré van hoorn" : "avanhoorn",
 "bjoern weissenfels" : "mailto:bjw@informatik.uni-kiel.de",
+"björn weißenfels":"mailto:bjw@informatik.uni-kiel.de",
 "christian wulf" : "ChristianWulf",
 "christian zirkelbach": "czirkelbach",
 "christian" : "czirkelbach",
@@ -49,6 +53,7 @@ lookup={
 "danish manzoor" : "danishmanzoor",
 "dennis kieselhorst" : "deki",
 "duellmtk@studi.informatik.uni-stuttgart.de" : "duelle",
+"duellmtk": "duelle",
 "florian fittkau" : "FFittkau",
 "github" : "github",
 "henry grow" : "mailto:hgr@informatik.uni-kiel.de",
@@ -56,6 +61,7 @@ lookup={
 "imran asad gul" : "mailto:iag@informatik.uni-kiel.de",
 "jürgen walter" : "juergen-walter",
 "marc adolf" : "madcau",
+"mad@informatik.uni-kiel.de" : "madcau",
 "matthias rohr" : "mailto:rohrrohr@googlemail.com",
 "micky singh multani" : "mailto:msm@informatik.uni-kiel.de",
 "nie" : "nils-christian",
@@ -64,11 +70,29 @@ lookup={
 "nina marwede" : "svn:nina",
 "pascale brandt" : "mailto:pbr@informatik.uni-kiel.de",
 "reiner jung":"rju",
+"teerat pitakrat":"teeratpitakrat",
 "thomas düllmann" : "duelle",
 "thomas f. duellmann" : "duelle",
 "thomas f. düllmann" : "duelle",
 "tillmann bielefeld" : "mailto:email@tielefeld.com",
-"wilhelm" : "whasselbring"
+"tillmann carlos bielefeld":"mailto:email@tielefeld.com",
+"wilhelm" : "whasselbring",
+"jan waller": "JanWaller",
+"felix magedanz": "FlxMgdnz",
+"robert von massow": "RvonMassow",
+  "sönke reimer" : "SonReimer",
+    "sonke reimer": "SonReimer",
+"dušan okanović":"okism",
+"ducan okanovic":"okism",
+    "sören henning":"SoerenHenning",
+   "soren henning":"SoerenHenning",
+"sven ulrich":"SvenUlrich",
+"lars blümke": "labl-ppi",
+"lars blumke": "labl-ppi",
+"tom frotscher":"ShaggsOn",
+    "robin finkbeiner":"renderfehler",
+    "Sebastian Harner": "Rackles"
+
 }
 
 def github_user_from_name(real_name: str) -> str|None:
@@ -78,7 +102,11 @@ def github_user_from_name(real_name: str) -> str|None:
         return f"https://github.com/{github_user}"
     _log_name_not_found(github_user=github_user,real_name=real_name)
     print(f"WARNING: github user for {real_name} not found in lookup. Check the log")
-    return f"https://github.com/{normalised_name.strip(" ")}"
+    return None
+
+def get_normal_name(real_name: str) -> str|None:
+    normalised_name=real_name.strip().lower()
+    return f"https://github.com/{"".join(normalised_name.split())}"
 
 def _log_name_not_found(github_user: str|None, real_name: str) -> None:
     if not github_user:
