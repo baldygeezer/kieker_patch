@@ -115,7 +115,7 @@ def process_content_block(content: list) -> tuple[str, list[str], list[str]]:
     body = """"""
     for item in content:
         if item["type"] in ["bulletList", "orderedList", "paragraph", "listItem"]:
-            item_content = item['content']
+            item_content = item.get('content',[])
             text, i_refs, usr_mentions = process_content_block(item_content)
             issue_refs.extend(i_refs)
             user_mentions.extend(usr_mentions)
