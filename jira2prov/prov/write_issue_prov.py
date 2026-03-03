@@ -23,7 +23,9 @@ def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
     github_user=jira_issue.github_reporter
     agent=prov_doc.agent(f"https://github.com/{github_user}")
     issue = prov_doc.entity(identifier=Jira2ProvNamespace.ISSUES.q_name(f"{jira_issue.key}"),
-                            other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name("issue")})
+                            other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name("issue"),
+                                              "jira2prov:mentions":len(jira_issue.description["mentions"]),
+                                              "jira2prov:refs":len(jira_issue.description["refs"])})
     issue.wasAttributedTo(agent)
     # link the issue to its github2prov equivalents
     for alt_issue in jira_issue.alternates:
@@ -97,15 +99,5 @@ def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
         previous_event_start=jira_event.start
 
 
-    prov_doc.serialize("test.ttl", format='rdf', rdf_format='ttl')
+    # prov_doc.serialize("j2p_kieker.ttl", format='rdf', rdf_format='ttl')
 
-
-
-
-
-    a=''
-
-
-
-
-    "https://github.com/kieker-monitoring/kieker/issues/1000"

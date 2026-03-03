@@ -1,5 +1,6 @@
 import datetime
 import json
+import re
 from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
@@ -113,10 +114,18 @@ class JiraHistoryItem(Jira2ProvItem):
         if not self._github_agent:
             self._github_agent = github_user_from_name(self.agent)
         return self._github_agent
-        return github_user_from_name(self.agent)
 
 def _process_description(desc:dict) -> JiraIssueDescriptionDict:
-    body, refs, mentions = process_content_block(desc["content"])
+    issue_id=re.compile(r"\bKIEK(?:ER)?-\d{1,4}\b")
+    if not desc:
+        body = ""
+        refs=[]
+        mentions=[]
+    else:
+        body, refs, mentions = process_content_block(desc["content"])
+        matches = set(issue_id.findall(body))
+        refs.extend(matches)
+
     return JiraIssueDescriptionDict(body=body,
                                    refs=refs,
                                    mentions=mentions)
