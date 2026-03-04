@@ -6,7 +6,7 @@ from prov.model import ProvDocument
 
 from jira2prov.model.model import JiraComment, JiraIssue
 from jira2prov.prov.provdoc import Jira2ProvNamespace, get_uuid5
-
+from jira2prov.prov.write_agent_prov import  mint_agent
 
 jira_id_map_path=Path("../../data/jira_to_gh_issues_map.json")
 jira_data_path=Path("../../data/jira_issues_dump/issues.jsonl")
@@ -20,8 +20,11 @@ def get_jira_comments(comments_data:list[dict])->list[JiraComment]:
 
 def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
     ###---Process the main issue---###
-    github_user=jira_issue.github_reporter
-    agent=prov_doc.agent(f"https://github.com/{github_user}")
+    # github_user=jira_issue.github_reporter
+    # agent=prov_doc.agent(f"https://github.com/{github_user}")
+    user=jira_issue.reporter
+    agent=mint_agent(user, prov_doc)
+
     issue = prov_doc.entity(identifier=Jira2ProvNamespace.ISSUES.q_name(f"{jira_issue.key}"),
                             other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name("issue"),
                                               "jira2prov:mentions":len(jira_issue.description["mentions"]),
@@ -67,8 +70,8 @@ def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
                                   startTime=jira_event.start, endTime=jira_event.end,
                                   # other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type)})
                                   other_attributes=event_attributes)
-
-        agent = prov_doc.agent(f"https://github.com/{jira_event.github_agent}")
+        agent=mint_agent(jira_event.agent, prov_doc)
+        # agent = prov_doc.agent(f"https://github.com/{jira_event.github_agent}")
         asc = prov_doc.association(activity=event,
                                    agent=agent,
                                    other_attributes={PROV_ROLE: Jira2ProvNamespace.JIRA2PROV.q_name('actor')})

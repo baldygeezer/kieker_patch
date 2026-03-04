@@ -91,12 +91,13 @@ class Jira2Prov(Enum):
 
 @dataclass()
 class JiraHistoryItem(Jira2ProvItem):
+    """class to collect the data for a jira history event"""
     id: str
     type: str
     start: datetime
     end: datetime
     agent: str
-    _github_agent: str|None
+    # _github_agent: str|None
 
     @classmethod
     def from_json(cls, history_item: JiraHistoryEventDict) -> Self:
@@ -106,14 +107,13 @@ class JiraHistoryItem(Jira2ProvItem):
                    type=_history_item_type(field=history_item["field"], to_string=history_item["to_string"]),
                    start=start,
                    end=end,
-                   agent=history_item["agent"],
-                   _github_agent=None)
+                   agent=history_item["agent"])
 
-    @property
-    def github_agent(self) -> str:
-        if not self._github_agent:
-            self._github_agent = github_user_from_name(self.agent)
-        return self._github_agent
+    # @property
+    # def github_agent(self) -> str:
+    #     if not self._github_agent:
+    #         self._github_agent = github_user_from_name(self.agent)
+    #     return self._github_agent
 
 def _process_description(desc:dict) -> JiraIssueDescriptionDict:
     issue_id=re.compile(r"\bKIEK(?:ER)?-\d{1,4}\b")
@@ -158,7 +158,7 @@ class JiraIssue(Jira2ProvItem):
     key: str
     created: datetime
     reporter: str
-    _github_reporter:str|None
+    # _github_reporter:str|None
     comments: dict[str, JiraComment]
     description: JiraIssueDescriptionDict
     github_history: dict[str, GithubHistoryDict]
@@ -172,16 +172,17 @@ class JiraIssue(Jira2ProvItem):
                                             start=comment.created,
                                             end=comment.created,
                                             agent=comment.author_name,
-                                            _github_agent=None)
+                                            # _github_agent=None
+                                            )
             self.jira_history.append(comment_event)
 
         self.jira_history.sort(key=lambda x: x.start)
 
-    @property
-    def github_reporter(self) -> str:
-        if not self._github_reporter:
-            self._github_reporter = github_user_from_name(self.reporter)
-        return self._github_reporter
+    # @property
+    # def github_reporter(self) -> str:
+    #     if not self._github_reporter:
+    #         self._github_reporter = github_user_from_name(self.reporter)
+    #     return self._github_reporter
 
     @classmethod
     def _process_changelog_items(cls, issue: dict):
@@ -226,7 +227,7 @@ class JiraIssue(Jira2ProvItem):
                    description=description,
                    jira_history=jira_history,
                    alternates=alternates,
-                   _github_reporter=None
+                   # _github_reporter=None
                    )
 
 
