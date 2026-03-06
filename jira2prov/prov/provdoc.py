@@ -34,6 +34,7 @@ class Jira2ProvNamespace(Enum):
     USERS = ("users", "https://github.com/")
     RDFS = ("rdfs", "http://www.w3.org/2000/01/rdf-schema#")
     XSD = ("xsd", "http://www.w3.org/2001/XMLSchema#")
+    SCHEMA = ("schema", "https://schema.org/")
 
     @property
     def prefix(self):
