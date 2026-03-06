@@ -8,13 +8,13 @@ from read_values import read_jsonl
 from user_lookup import mint_user_uri
 
 
-def run_patch(filename):
+def run_patch(input_json_file, output_rdf_file):
     provdoc = get_provdoc()
-    for commit in read_jsonl(filename):
+    for commit in read_jsonl(input_json_file):
         write_agent(commit=commit, type="author", provdoc=provdoc)
         write_agent(commit=commit, type="committer", provdoc=provdoc)
-    provdoc.serialize("out.ttl", format='rdf', rdf_format='ttl')
-
+    # provdoc.serialize(output_rdf_file, format='rdf', rdf_format='ttl')
+    provdoc.serialize(output_rdf_file, format='rdf',rdf_format="ttl")
 
 def write_agent(commit: dict, type: str, provdoc: ProvDocument):
     agent = commit.get("commit", {}).get(type)
