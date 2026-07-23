@@ -25,10 +25,21 @@ def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
     user=jira_issue.reporter
     agent=mint_agent(user, prov_doc)
 
+    # issue_attributes = {"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name("issue"),
+    #                     "jira2prov:mentions": len(jira_issue.description["mentions"]),
+    #                     "jira2prov:refs": len(jira_issue.description["refs"]),
+    #                     "schema:mentions":set(mentioned_agents)}
+    issue_attributes = [("prov:type", Jira2ProvNamespace.JIRA2PROV.q_name("issue")),
+                        ("jira2prov:mentions", len(jira_issue.description["mentions"])),
+                        ("jira2prov:refs", len(jira_issue.description["refs"]))]
+    mentioned_agents=[]
+    for agent_id in jira_issue.description["mentions"]:
+        mentioned_agent=mint_agent(agent_id, prov_doc)
+        mentioned_agents.append(("schema:mentions",mentioned_agent))
+    issue_attributes.extend(mentioned_agents)
     issue = prov_doc.entity(identifier=Jira2ProvNamespace.ISSUES.q_name(f"{jira_issue.key}"),
-                            other_attributes={"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name("issue"),
-                                              "jira2prov:mentions":len(jira_issue.description["mentions"]),
-                                              "jira2prov:refs":len(jira_issue.description["refs"])})
+                            other_attributes=issue_attributes)
+
     issue.wasAttributedTo(agent)
     # link the issue to its github2prov equivalents
     for alt_issue in jira_issue.alternates:
@@ -55,14 +66,21 @@ def write_jira_prov(jira_issue:JiraIssue,prov_doc:ProvDocument):
     version_number=1 #start at version 1
 
     for jira_event in jira_issue.jira_history:
-        event_attributes = {"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type)}
+        # event_attributes = {"prov:type": Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type)}
+        event_attributes = [("prov:type", Jira2ProvNamespace.JIRA2PROV.q_name(jira_event.type))]
 
         if jira_event.type=="comment":
             jira_comment=jira_issue.comments.get(jira_event.id)
             mentions=len(jira_comment.mentions)
             refs=len(jira_comment.references)
-            event_attributes["jira2prov:mentions"]=mentions
-            event_attributes["jira2prov:refs"]=refs
+            event_attributes.append(("jira2prov:mentions", mentions))
+            event_attributes.append(("jira2prov:refs", refs))
+            # event_attributes["jira2prov:mentions"]=mentions
+            # event_attributes["jira2prov:refs"]=refs
+            mentioned_agents=[]
+            for agent_id in jira_comment.mentions:
+                mentioned_agent=mint_agent(agent_id, prov_doc)
+                event_attributes.append(("schema:mentions", mentioned_agent))
 
 
         event_id = get_uuid5(jira_event.id + jira_event.type + str(jira_event.start))  # BUG!!!!!!!! if type is the same for simultanious events???
