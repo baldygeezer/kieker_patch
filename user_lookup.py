@@ -8,7 +8,10 @@ name_lookup = {
 "bjoern weissenfels" : "bjorn weissenfels",
 "björn weißenfels":"bjorn weissenfels",
 "tillmann bielefeld" : "tillmann bielefeld",
-"tillmann carlos bielefeld":"tillmann bielefeld"}
+"tillmann carlos bielefeld":"tillmann bielefeld",
+"armin möbius":"armin mobius",
+"marius löwe":"marius lowe",
+"pascal brandt": "pascale brandt", }
 
 lookup={
 "andre van hoorn" : "avanhoorn",
@@ -58,6 +61,7 @@ lookup={
 "thomas f. düllmann" : "duelle",
 "tom frotscher":"ShaggsOn",
 "wilhelm" : "whasselbring",
+"Wilhelm Hasselbring" : "whasselbring"
 }
 
 def github_user_from_name(real_name: str) -> str|None:
@@ -70,7 +74,7 @@ def github_user_from_name(real_name: str) -> str|None:
     return None
 
 def get_normal_name(real_name: str) -> str|None:
-    checked_name=name_lookup.get(real_name)
+    checked_name=name_lookup.get(real_name.strip().lower())
     if checked_name is not None:
         normalised_name=checked_name.strip().lower()
     else:
@@ -84,6 +88,8 @@ def _log_name_not_found(github_user: str|None, real_name: str) -> None:
 
 def mint_user_uri(real_name: str) -> str|None:
     uri = ''
+    if real_name.startswith("@"):
+        real_name = real_name.lstrip("@")
     github_user = github_user_from_name(real_name=real_name)
     if github_user is not None:
         uri = f"{Jira2ProvNamespace.USERS.url}{github_user}"
