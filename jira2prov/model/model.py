@@ -62,13 +62,15 @@ class JiraComment(Jira2ProvItem):
 
 
 def _history_item_type(field: str, to_string) -> str:
-    item_type = ""
-    if field in ["status", "resolution", "Workflow"]:
-        item_type = field + to_string
-    # elif field == "workflow":
-    #     item_type = field + to_string.replace(" ")
-    else:
-        item_type = field
+    # item_type = ""
+    # if field in ["status", "resolution", "Workflow"]:
+    #     item_type = field + to_string
+    # # elif field == "workflow":
+    # #     item_type = field + to_string.replace(" ")
+    # else:
+    if field == "Comment" and to_string=="null":
+        item_type = "commentDeleted"
+    item_type = field
     return item_type.replace(" ", "")
 
 
