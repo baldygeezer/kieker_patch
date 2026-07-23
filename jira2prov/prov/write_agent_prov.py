@@ -49,5 +49,7 @@ def mint_non_github_agent_uuid5(user_value: str, provdoc: ProvDocument, name: st
 
 
 def mint_agent(users_real_name: str, provdoc: ProvDocument, github_id: str | None = None) -> model.ProvAgent:
+    if users_real_name.startswith("@"):
+        users_real_name = users_real_name.lstrip("@")
     uri = mint_user_uri(users_real_name)
     return provdoc.agent(uri, other_attributes={"foaf:name": users_real_name})
