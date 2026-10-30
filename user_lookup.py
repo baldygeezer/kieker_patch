@@ -4,8 +4,8 @@ from jira2prov.prov.provdoc import Jira2ProvNamespace
 
 MISSING_NAMES_LOG = Path("missing_github_names.txt")
 
-name_lookup = {
- }
+#  these have been redacted for the zenodo snapshot to avoid publishing developers real names
+name_lookup = { }
 
 lookup={
 
